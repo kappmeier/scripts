@@ -124,8 +124,8 @@ def readFromFile(inputFile, outFile, lastEmpty = False):
 	lastEmpty = False      
       print converted
       if converted.strip().startswith(r"\input"):
-	outFile.write( "Read file '" + fileNameFromInput(converted) + "'" )
-	lastEmpty = readFromFile(baseDir + fileNameFromInput(converted) +".tex", outFile, lastEmpty )
+	print "Read file " + fileNameFromInput(converted)
+	lastEmpty = readFromFile(baseDir + fileNameFromInput(converted) + ".tex", outFile, lastEmpty )
       else:
 	outFile.write(converted)
   return lastEmpty
