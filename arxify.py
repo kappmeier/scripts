@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/env/python3
 # coding: utf-8
 # © Jan-Philipp Kappmeier
 
@@ -22,6 +22,7 @@ Example: The call
     single document called document-arxiv.tex in the same subfolder.
 """
 
+import os
 import sys
 
 if len(sys.argv) < 3:
@@ -31,6 +32,7 @@ if len(sys.argv) < 3:
 BASE_DIR = sys.argv[1]
 BASE_FILE = sys.argv[2]
 OUT = sys.argv[3]
+VERBOSE = True if len(sys.argv) > 4 and sys.argv[4] == 'v' else False
 
 if not BASE_DIR.endswith('/'):
     BASE_DIR = BASE_DIR + '/'
@@ -117,7 +119,9 @@ def read_from_file(input_file, out_file, last_empty=False):
                     whitespace.
     """
     with open(input_file, "r") as source_file:
+        line_number = 0
         for line in source_file:
+            line_number += 1
             converted = convert_line_to_arxiv(line)
             if not converted.strip():
                 if last_empty:
@@ -126,14 +130,32 @@ def read_from_file(input_file, out_file, last_empty=False):
                     last_empty = True
             else:
                 last_empty = False
-            print(converted)
+            if VERBOSE:
+                print(converted)
             if converted.strip().startswith(r"\input"):
                 print("Read file {}".format(file_name_from_input(converted)))
-                last_empty = read_from_file(BASE_DIR + file_name_from_input(converted) + ".tex",
-                                            out_file, last_empty)
+                file_name = get_include_file(file_name_from_input(converted))
+                if file_name is None:
+                    print("Cannot include file from {}:{}. Stop.".format(input_file, line_number), file=sys.stderr)
+                    sys.exit(1)
+                last_empty = read_from_file(file_name, out_file, last_empty)
             else:
                 out_file.write(converted)
     return last_empty
+
+def get_include_file(include_name):
+    """Checks whether an included file exists directly or with ending '.tex'.
+
+    Args:
+        include_name (str): the file to be included as in the tex document
+
+        Returns: the name of the file to be included or None
+    """
+    file_name = BASE_DIR + include_name + ".tex"
+    if os.path.isfile(file_name):
+        return file_name
+    file_name = BASE_DIR + include_name
+    return file_name if os.path.isfile(file_name) else None
 
 with open(OUT, "w") as targetFile:
     read_from_file(BASE_DIR + BASE_FILE, targetFile)
