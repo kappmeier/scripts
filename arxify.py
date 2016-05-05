@@ -25,17 +25,22 @@ Example: The call
 import os
 import sys
 
-if len(sys.argv) < 3:
-    print("Missing parameter!\n")
-    exit(1)
+def parse_opions():
+    """Parses the input directory and file and the output parameters.
+    """
+    if len(sys.argv) < 3:
+        print("Missing parameter!\n")
+        exit(1)
 
-BASE_DIR = sys.argv[1]
-BASE_FILE = sys.argv[2]
-OUT = sys.argv[3]
-VERBOSE = True if len(sys.argv) > 4 and sys.argv[4] == 'v' else False
+    base_dir = sys.argv[1]
+    base_file = sys.argv[2]
+    out_file = sys.argv[3]
+    verbose = True if len(sys.argv) > 4 and sys.argv[4] == 'v' else False
 
-if not BASE_DIR.endswith('/'):
-    BASE_DIR = BASE_DIR + '/'
+    if not base_dir.endswith('/'):
+        base_dir = base_dir + '/'
+
+    return (base_dir, base_file, out_file, verbose)
 
 # takes a line that is read
 # removes a comment part, if any
@@ -93,7 +98,7 @@ def file_name_from_input(command):
     end_index = command.index("}")
     return command[open_index+1:end_index]
 
-def read_from_file(input_file, out_file, last_empty=False):
+def read_from_file(base_dir, input_file, out_file, last_empty=False, verbose=False):
     r"""Write contents of a given file with removed tex commands.
 
     Opens the given input file, parses it line by line, and appends lines
@@ -118,7 +123,7 @@ def read_from_file(input_file, out_file, last_empty=False):
         last_empty: Specifies, if the last line written to the output file was
                     whitespace.
     """
-    with open(input_file, "r") as source_file:
+    with open(base_dir + input_file, "r") as source_file:
         line_number = 0
         for line in source_file:
             line_number += 1
@@ -130,20 +135,21 @@ def read_from_file(input_file, out_file, last_empty=False):
                     last_empty = True
             else:
                 last_empty = False
-            if VERBOSE:
+            if verbose:
                 print(converted)
             if converted.strip().startswith(r"\input"):
                 print("Read file {}".format(file_name_from_input(converted)))
-                file_name = get_include_file(file_name_from_input(converted))
+                file_name = get_include_file(base_dir, file_name_from_input(converted))
                 if file_name is None:
-                    print("Cannot include file from {}:{}. Stop.".format(input_file, line_number), file=sys.stderr)
+                    print("Cannot include file from {}:{}. Stop.".format(base_dir + input_file, line_number),
+                          file=sys.stderr)
                     sys.exit(1)
-                last_empty = read_from_file(file_name, out_file, last_empty)
+                last_empty = read_from_file(base_dir, file_name, out_file, last_empty)
             else:
                 out_file.write(converted)
     return last_empty
 
-def get_include_file(include_name):
+def get_include_file(base_dir, include_name):
     """Checks whether an included file exists directly or with ending '.tex'.
 
     Args:
@@ -151,11 +157,18 @@ def get_include_file(include_name):
 
         Returns: the name of the file to be included or None
     """
-    file_name = BASE_DIR + include_name + ".tex"
-    if os.path.isfile(file_name):
+    file_name = include_name + ".tex"
+    if os.path.isfile(base_dir + file_name):
         return file_name
-    file_name = BASE_DIR + include_name
-    return file_name if os.path.isfile(file_name) else None
+    file_name = include_name
+    return file_name if os.path.isfile(base_dir + file_name) else None
 
-with open(OUT, "w") as targetFile:
-    read_from_file(BASE_DIR + BASE_FILE, targetFile)
+def main():
+    """Executes the arxify script.
+    """
+    base_dir, base_file, out_file, verbose = parse_opions()
+    with open(out_file, "w") as target_file:
+        read_from_file(base_dir, base_file, target_file, verbose=verbose)
+
+if __name__ == '__main__':
+    main()
