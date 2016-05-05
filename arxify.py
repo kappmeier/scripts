@@ -63,6 +63,9 @@ def convert_line_to_arxiv(line):
     >>> convert_line_to_arxiv("    ")
     ''
 
+    >>> convert_line_to_arxiv("% comment only line")
+    ''
+
     Args:
         line(str):    A line in the tex source code.
 
