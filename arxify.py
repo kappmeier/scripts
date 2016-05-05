@@ -50,6 +50,18 @@ def convert_line_to_arxiv(line):
     """ Convert a line of tex code to be used in arXiv publication.
 
     Strips away comments, but a last '%' is remained on comment lines.
+    
+    >>> convert_line_to_arxiv(r"\section{sec} % section 2")
+    '\\\\section{sec} %'
+    
+    >>> convert_line_to_arxiv(r"\section{sec}")
+    '\\\\section{sec}'
+    
+    >>> convert_line_to_arxiv(r"    \section{sec}    ")
+    '\\\\section{sec}'
+    
+    >>> convert_line_to_arxiv("    ")
+    ''
 
     Args:
         line(str):    A line in the tex source code.
@@ -59,16 +71,28 @@ def convert_line_to_arxiv(line):
     """
     stripped = line.strip()
     if not stripped:
-        return "\n"
+        return ""
     index = comment_index(stripped) + 1 # lines ending with comment should continue to end with it
     before_comment = stripped[:index]
-    return before_comment + "\n" if before_comment and before_comment != "%" else ""
+    return before_comment if before_comment and before_comment != "%" else ""
 
 def comment_index(line):
     r"""Return the starting index of a comment for a given line of tex code.
 
     Comments are considered to start with the character '%'. However, the symbol
     appears as '\%', where it is ignored.
+
+    >>> comment_index("\someCommand{param} more text %we do this because...")
+    30
+    
+    >>> comment_index("some line contains a \% value %we do this because...")
+    30
+
+    >>> comment_index(r"new line andcomment \\% value")
+    22
+
+    >>> comment_index("without comment")
+    15
 
     Args:
         line (str): The line.
@@ -87,6 +111,18 @@ def file_name_from_input(command):
 
     Include commands look like '\input{path/to/filename}'. The value is assumed
     to be placed between the first pair of opening and closing curly braces.
+
+    >>> file_name_from_input("\input{path/to/filename}")
+    'path/to/filename'
+    
+    also works if the input command line contains more text
+    
+    >>> file_name_from_input("  \input{path/to/filename} % include file")
+    'path/to/filename'
+    
+    This fails
+    >>> file_name_from_input("\section{sec} \input{path/to/filename}")
+    'sec'
 
     Args:
         command (str): The tex command, and maybe some additional text as long
