@@ -40,7 +40,7 @@ def parse_opions():
     if not base_dir.endswith('/'):
         base_dir = base_dir + '/'
 
-    return (base_dir, base_file, out_file, verbose)
+    return base_dir, base_file, out_file, verbose
 
 # takes a line that is read
 # removes a comment part, if any
