@@ -47,19 +47,19 @@ def parse_opions():
 # if line starts with coment, nothing is returned
 # empty lines are returned as empty line
 def convert_line_to_arxiv(line):
-    """ Convert a line of tex code to be used in arXiv publication.
+    r"""Convert a line of tex code to be used in arXiv publication.
 
     Strips away comments, but a last '%' is remained on comment lines.
-    
+
     >>> convert_line_to_arxiv(r"\section{sec} % section 2")
     '\\\\section{sec} %'
-    
+
     >>> convert_line_to_arxiv(r"\section{sec}")
     '\\\\section{sec}'
-    
+
     >>> convert_line_to_arxiv(r"    \section{sec}    ")
     '\\\\section{sec}'
-    
+
     >>> convert_line_to_arxiv("    ")
     ''
 
@@ -87,7 +87,7 @@ def comment_index(line):
 
     >>> comment_index("\someCommand{param} more text %we do this because...")
     30
-    
+
     >>> comment_index("some line contains a \% value %we do this because...")
     30
 
@@ -117,12 +117,12 @@ def file_name_from_input(command):
 
     >>> file_name_from_input("\input{path/to/filename}")
     'path/to/filename'
-    
+
     also works if the input command line contains more text
-    
+
     >>> file_name_from_input("  \input{path/to/filename} % include file")
     'path/to/filename'
-    
+
     This fails
     >>> file_name_from_input("\section{sec} \input{path/to/filename}")
     'sec'
@@ -180,7 +180,8 @@ def read_from_file(base_dir, input_file, out_file, last_empty=False, verbose=Fal
                 print("Read file {}".format(file_name_from_input(converted)))
                 file_name = get_include_file(base_dir, file_name_from_input(converted))
                 if file_name is None:
-                    print("Cannot include file from {}:{}. Stop.".format(base_dir + input_file, line_number),
+                    print("Cannot include file from {}:{}. Stop."
+                          .format(base_dir + input_file, line_number),
                           file=sys.stderr)
                     sys.exit(1)
                 last_empty = read_from_file(base_dir, file_name, out_file, last_empty)
