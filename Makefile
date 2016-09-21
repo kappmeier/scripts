@@ -7,6 +7,7 @@ sloc:
 
 test:
 	cd $(SRC_DIR) && nosetests --verbose --with-xunit --xunit-file=xunit.xml --with-coverage --xcoverage-file=coverage.xml || :
+	cd $(SRC_DIR) && python3 -m coverage xml
 
 flakes:
 	find $(SRC_DIR) -name *.py|egrep -v '^./tests/'|xargs python3 -m pyflakes > pyflakes.out || :
