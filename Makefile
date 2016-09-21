@@ -9,11 +9,10 @@ test:
 	cd $(SRC_DIR) && nosetests --verbose --with-xunit --xunit-file=xunit.xml --with-coverage --xcoverage-file=coverage.xml || :
 
 flakes:
-	find $(SRC_DIR) -name *.py|egrep -v '^./tests/'|xargs pyflakes > pyflakes.out || :
+	find $(SRC_DIR) -name *.py|egrep -v '^./tests/'|xargs python3 -m pyflakes > pyflakes.out || :
 
 lint:
-	find $(SRC_DIR) -name *.py|egrep -v '^./tests/' | xargs pylint3 --output-format=parseable --reports=y > pylint.out || :
-
+	find $(SRC_DIR) -name *.py|egrep -v '^./tests/' | xargs python3 -m pylint --output-format=parseable --reports=y > pylint.out || :
 
 clean:
 	rm -f sloccount.sc
