@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-# Moves files from a folder to its destination
+# Files from a directory satisfying a regular expression are distributed into a target directory.
 #
-# Files are moved with respect to regular expressions.
+# The target (sub-)directory and the file name can be defined with respect to groups form the
+# matched pattern.
 from logging import basicConfig, debug, info, DEBUG, INFO
 from os import path, listdir
 from pathlib import Path
