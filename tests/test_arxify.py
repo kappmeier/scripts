@@ -1,6 +1,6 @@
 import unittest
 
-from arxify import convert_line_to_arxiv
+from python.arxify import convert_line_to_arxiv
 
 
 class TestArxify(unittest.TestCase):

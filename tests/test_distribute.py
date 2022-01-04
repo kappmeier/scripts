@@ -3,7 +3,7 @@ from unittest import TestCase, main
 from tempfile import TemporaryDirectory
 from os import mkdir, path
 
-from distribute import distribute, Distribution
+from python.distribute import distribute, Distribution
 
 MockArgSpace = namedtuple('MockArgSpace', ['copy', 'check'])
 
