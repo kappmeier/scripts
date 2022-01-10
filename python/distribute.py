@@ -1,8 +1,13 @@
-#!/usr/bin/env python3
-# Files from a directory satisfying a regular expression are distributed into a target directory.
-#
-# The target (sub-)directory and the file name can be defined with respect to groups form the
-# matched pattern.
+#!/usr/env/python3
+# coding: utf-8
+# © Jan-Philipp Kappmeier
+
+r"""Distributes files from a directory satisfying a regular expression into a
+target directory.
+
+The target (sub-)directory and the file name can be defined with respect to
+groups form the matched pattern.
+"""
 from logging import basicConfig, debug, info, DEBUG, INFO
 from os import path, listdir
 from pathlib import Path
@@ -117,10 +122,17 @@ def _transfer(source: str, destination: str, config) -> None:
             move(source, destination)
 
 
-# Execute the main script
-if __name__ == '__main__':
+def main():
+    """Executes the distribute script.
+    """
     args = _get_arguments()
     log_level = DEBUG if args.verbose else INFO
     basicConfig(format='%(message)s', encoding='utf-8', level=log_level)
     input_distribution = Distribution(args.pattern, args.target_directory, args.target_file_name)
     distribute(args.directory, input_distribution, args)
+
+
+if __name__ == '__main__':
+    """Execute the main script when directly called.
+    """
+    main()
