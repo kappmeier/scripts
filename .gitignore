@@ -1,2 +1,10 @@
+#Ignore
+
+## Python
+
+### Develop
 __pycache__
 
+### Build
+**egg-info*
+build/
