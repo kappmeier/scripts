@@ -18,14 +18,15 @@ Example: The call
 
     $ ./arxify.py ./doc/ document.tex ./doc/document-arxiv.tex
 
-    converts the document contained in document.tex in the subfolder doc/ into a
-    single document called document-arxiv.tex in the same subfolder.
+    converts the document contained in document.tex in the sub folder doc/ into
+    a single document called document-arxiv.tex in the same sub folder.
 """
 
 import os
 import sys
 
-def parse_opions():
+
+def parse_options():
     """Parses the input directory and file and the output parameters.
     """
     if len(sys.argv) < 3:
@@ -42,14 +43,12 @@ def parse_opions():
 
     return base_dir, base_file, out_file, verbose
 
-# takes a line that is read
-# removes a comment part, if any
-# if line starts with coment, nothing is returned
-# empty lines are returned as empty line
+
 def convert_line_to_arxiv(line):
     r"""Convert a line of tex code to be used in arXiv publication.
 
-    Strips away comments, but a last '%' is remained on comment lines.
+    Strips away comments, but a last '%' is remained on comment lines. Empty
+    lines are returned as empty lines.
 
     >>> convert_line_to_arxiv(r"\section{sec} % section 2")
     '\\\\section{sec} %'
@@ -75,9 +74,10 @@ def convert_line_to_arxiv(line):
     stripped = line.strip()
     if not stripped:
         return ""
-    index = comment_index(stripped) + 1 # lines ending with comment should continue to end with it
+    index = comment_index(stripped) + 1  # lines ending with comment should continue to end with it
     before_comment = stripped[:index]
     return before_comment if before_comment and before_comment != "%" else ""
+
 
 def comment_index(line):
     r"""Return the starting index of a comment for a given line of tex code.
@@ -91,8 +91,8 @@ def comment_index(line):
     >>> comment_index("some line contains a \% value %we do this because...")
     30
 
-    >>> comment_index(r"new line andcomment \\% value")
-    22
+    >>> comment_index(r"new line and comment \\% value")
+    23
 
     >>> comment_index("without comment")
     15
@@ -104,10 +104,11 @@ def comment_index(line):
         does not contain a comment.
     """
     # searching for '\%' is not feasible as '\' can be used in constructs like '\\%'
-    # simple approach: strip all occurences of '\\' and afterwards of '\%'
+    # simple approach: strip all occurrences of '\\' and afterwards of '\%'
     tmp = line.replace(r"\\", "@@")
     tmp = tmp.replace(r"\%", "@@") + "%"
     return tmp.index("%")
+
 
 def file_name_from_input(command):
     r"""Return path and file name of a tex input command
@@ -131,11 +132,12 @@ def file_name_from_input(command):
         command (str): The tex command, and maybe some additional text as long
         as no '{' occur before the input command.
 
-        Returns: The text between opening and closing braces.
+    Returns: The text between opening and closing braces.
     """
     open_index = command.index("{")
     end_index = command.index("}")
-    return command[open_index+1:end_index]
+    return command[open_index + 1:end_index]
+
 
 def read_from_file(base_dir, input_file, out_file, last_empty=False, verbose=False):
     r"""Write contents of a given file with removed tex commands.
@@ -150,17 +152,19 @@ def read_from_file(base_dir, input_file, out_file, last_empty=False, verbose=Fal
 
     If another file is included using the '\input' tex command, the command is
     replaced by the content of the file. The replacing of inputs happens
-    recursiveley. For this method to work, the '\input' commands must appear as
-    a single latex command on a line, maybe preceeded or followed by whitespace
+    recursively. For this method to work, the '\input' commands must appear as
+    a single latex command on a line, maybe preceded or followed by whitespace
     or comments. All file paths are assumed to be relative to the base
     directory.
 
     Args:
-        input_file (str): The (tex) file to be parsed
+        base_dir (str): Root directory
+        input_file (str): The (tex) file to be parsed  relative to root
         out_file (file): The file handle used to append contents of the input
                          file.
         last_empty: Specifies, if the last line written to the output file was
                     whitespace.
+        verbose (bool): Whether additional output should be printed
     """
     with open(base_dir + input_file, "r") as source_file:
         line_number = 0
@@ -189,13 +193,16 @@ def read_from_file(base_dir, input_file, out_file, last_empty=False, verbose=Fal
                 out_file.write(converted)
     return last_empty
 
+
 def get_include_file(base_dir, include_name):
     """Checks whether an included file exists directly or with ending '.tex'.
 
     Args:
-        include_name (str): the file to be included as in the tex document
+        base_dir (str): the root directory
+        include_name (str): the file to be included as in the tex document,
+                            relative to the root directory
 
-        Returns: the name of the file to be included or None
+    Returns: the name of the file to be included or None
     """
     file_name = include_name + ".tex"
     if os.path.isfile(base_dir + file_name):
@@ -203,12 +210,14 @@ def get_include_file(base_dir, include_name):
     file_name = include_name
     return file_name if os.path.isfile(base_dir + file_name) else None
 
+
 def main():
     """Executes the arxify script.
     """
-    base_dir, base_file, out_file, verbose = parse_opions()
+    base_dir, base_file, out_file, verbose = parse_options()
     with open(out_file, "w") as target_file:
         read_from_file(base_dir, base_file, target_file, verbose=verbose)
+
 
 if __name__ == '__main__':
     main()
