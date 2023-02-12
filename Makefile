@@ -6,7 +6,7 @@ sloc:
 	sloccount --duplicates --wide --details $(SRC_DIR) | fgrep -v -e .git -e sloccount.sc -e .xml > sloccount.sc || :
 
 test:
-	cd $(SRC_DIR) && python3 -m nose --verbose --with-xunit --xunit-file=xunit.xml --with-xcoverage --xcoverage-file=coverage.xml || :
+	cd $(SRC_DIR) && python3 -m nose2 --verbose --with-coverage --coverage-report=xml || :
 
 flakes:
 	find $(SRC_DIR) -name *.py|egrep -v '^./tests/'|xargs python3 -m pyflakes > pyflakes.out || :
@@ -16,6 +16,7 @@ lint:
 
 clean:
 	rm -f sloccount.sc
+	rm -f .coverage
 	rm -f coverage.xml
 	rm -f xunit.xml
 	rm -f pyflakes.out
