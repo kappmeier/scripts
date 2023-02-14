@@ -6,18 +6,21 @@ r"""Distributes files from a directory satisfying a regular expression into a
 target directory.
 
 The target (sub-)directory and the file name can be defined with respect to
-groups form the matched pattern.
+groups form the matched pattern. Renaming supports limited expressions.
 """
 from logging import basicConfig, debug, info, DEBUG, INFO
 from os import path, listdir
 from pathlib import Path
 from re import compile
 from shutil import copyfile, move
+from typing import List
 
 from tap import Tap
 
-_INDEX_PATTERN = r"\{([0-9]+)\}"
+_INDEX_PATTERN = r"\{([0-9:A-Z]+)\}"
 _INDEX_REGEX = compile(_INDEX_PATTERN)
+_INDEX_EXPRESSION_PATTERN = r"^([0-9]+)(|:([A-Z]+))$"
+_INDEX_EXPRESSION_REGEX = compile(_INDEX_EXPRESSION_PATTERN)
 
 
 class Distribution:
@@ -25,14 +28,30 @@ class Distribution:
         self.target_directory = target_directory
         self.target_file_name = target_file_name
         self.regex = compile(pattern)
-        self.target_directory_indices = [int(x) for x in _INDEX_REGEX.findall(target_directory)]
-        debug("Target directory indices: %s", self.target_directory_indices)
-        self.target_file_name_indices = [int(x) for x in _INDEX_REGEX.findall(target_file_name)]
-        debug("Target file name indices: %s", self.target_file_name_indices)
+        self.target_directory_indices, self.target_directory_operations = self._init_pair(target_directory, "directory")
+        self.target_file_name_indices, self.target_file_name_operations = self._init_pair(target_file_name, "file name")
+
+    @staticmethod
+    def _init_pair(target: str, description: str):
+        target_file_name_matches = [_INDEX_EXPRESSION_REGEX.findall(x) for x in _INDEX_REGEX.findall(target)]
+        target_file_name_indices = [int(x[0][0]) for x in target_file_name_matches]
+        target_file_name_operations = [x[0][2] if x[0][2] != "" else "NONE" for x in target_file_name_matches]
+        debug("Target %s indices: %s", description, target_file_name_indices)
+        return target_file_name_indices, target_file_name_operations
 
     def match(self, candidate_file):
         match = self.regex.match(candidate_file)
         return DistributionMatch(match, self) if match is not None else None
+
+
+def _apply(fill_value: str, operation: str):
+    match operation:
+        case "DEC":
+            return int(fill_value) - 1
+        case "NONE":
+            return fill_value
+        case _:
+            raise ValueError("Unsupported operation: {}".format(operation))
 
 
 class DistributionMatch:
@@ -43,16 +62,20 @@ class DistributionMatch:
         self.target_directory()
 
     def target_directory(self):
-        target_directory_fill_values = [self.match.groups()[i] for i in
-                                        self.distribution.target_directory_indices]
-        target_directory_format = _INDEX_REGEX.sub('{}', self.distribution.target_directory)
-        return target_directory_format.format(*target_directory_fill_values)
+        return self._replace(self.distribution.target_directory_indices, self.distribution.target_directory_operations,
+                             self.distribution.target_directory)
 
     def target_file(self):
-        target_file_name_fill_values = [self.match.groups()[i] for i in
-                                        self.distribution.target_file_name_indices]
-        target_file_format = _INDEX_REGEX.sub('{}', self.distribution.target_file_name)
-        return target_file_format.format(*target_file_name_fill_values)
+        return self._replace(self.distribution.target_file_name_indices, self.distribution.target_file_name_operations,
+                             self.distribution.target_file_name)
+
+    def _replace(self, indices: List[int], operations: List[str], target: str) -> str:
+        original_fill_values = [self.match.groups()[i] for i in indices]
+
+        final_fill_values = [_apply(f, b) for (f, b) in zip(original_fill_values, operations)]
+
+        target_file_format = _INDEX_REGEX.sub('{}', target)
+        return target_file_format.format(*final_fill_values)
 
 
 class CreateDistributeArgumentParser(Tap):

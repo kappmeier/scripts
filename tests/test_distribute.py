@@ -13,6 +13,10 @@ _TEST_FILE_NAME = "{1}-{2}-{3}_{0}"
 _MATCHING_INPUT = "prefix-move2end_2021-03-19"
 _EXPECTED_DIRECTORY = "/target/directory/2021"
 _EXPECTED_FILE = "2021-03-19_move2end"
+_TEST_EXPRESSION_DIRECTORY = "/target/directory/{1:DEC}"
+_TEST_EXPRESSION_FILE_NAME = "{1}-{2:DEC}-{3:DEC}_{0}"
+_EXPECTED_DIRECTORY_DEC = "/target/directory/2020"
+_EXPECTED_FILE_DEC = "2021-2-18_move2end"  # Observe, no formatting is applied!
 
 
 class TestDistribution(TestCase):
@@ -42,6 +46,12 @@ class TestDistributionMatch(TestCase):
             .match(_MATCHING_INPUT)
         self.assertEqual(fixture.target_directory(), _EXPECTED_DIRECTORY)
         self.assertEqual(fixture.target_file(), _EXPECTED_FILE)
+
+    def test_subtraction(self):
+        fixture = Distribution(_TEST_PATTERN, _TEST_EXPRESSION_DIRECTORY,
+                               _TEST_EXPRESSION_FILE_NAME).match(_MATCHING_INPUT)
+        self.assertEqual(fixture.target_directory(), _EXPECTED_DIRECTORY_DEC)
+        self.assertEqual(fixture.target_file(), _EXPECTED_FILE_DEC)
 
 
 class TestDistributionApplication(TestCase):
